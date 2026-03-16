@@ -139,6 +139,12 @@
                 <Grid x:Name="HistoryContainer" Margin="12" />
             </TabItem>
 
+            <!-- WinCC Log Viewer Tab -->
+            <TabItem Header="WinCC Log Viewer" Style="{StaticResource DarkTab}"
+                     x:Name="WinCcTab">
+                <Grid x:Name="WinCcContainer" Margin="12" />
+            </TabItem>
+
         </TabControl>
 
         <!-- ── Status bar ── -->

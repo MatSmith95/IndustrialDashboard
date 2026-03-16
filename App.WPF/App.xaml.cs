@@ -31,6 +31,7 @@ public partial class App : Application
             sp.GetRequiredService<DataLoggingService>(),
             Current.Dispatcher));
         services.AddTransient<HistoryViewModel>();
+        services.AddTransient<WinCcViewModel>();
 
         // Views
         services.AddSingleton<MainWindow>();
