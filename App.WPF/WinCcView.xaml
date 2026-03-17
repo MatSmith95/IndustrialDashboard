@@ -3,6 +3,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
              Background="{StaticResource BackgroundBrush}">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="260" />
@@ -120,7 +123,7 @@
                              Foreground="{StaticResource AccentBrush}"
                              Background="Transparent"
                              BorderBrush="Transparent"
-                             Visibility="{Binding IsLoading, Converter={x:Static BooleanToVisibilityConverter}}" />
+                             Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}" />
             </StackPanel>
         </Border>
 
@@ -155,7 +158,7 @@
                                Foreground="{StaticResource TextSecondaryBrush}"
                                FontSize="14"
                                HorizontalAlignment="Center" VerticalAlignment="Center"
-                               Visibility="{Binding IsNoData, Converter={x:Static BooleanToVisibilityConverter}}" />
+                               Visibility="{Binding IsNoData, Converter={StaticResource BoolToVis}}" />
                 </Grid>
             </Border>
 
