@@ -74,11 +74,14 @@
                             <StackPanel>
                                 <TextBlock Text="TEMPERATURE" FontSize="11" FontWeight="SemiBold"
                                            Foreground="{StaticResource TextSecondaryBrush}" />
-                                <TextBlock Text="{Binding CurrentTemperature, StringFormat={}{0:F2}}"
-                                           FontSize="44" FontWeight="Bold"
-                                           Foreground="{StaticResource OrangeBrush}" Margin="0,4,0,0" />
-                                <TextBlock Text="°C" FontSize="14"
-                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,4,0,0">
+                                    <TextBlock Text="{Binding CurrentTemperature, StringFormat={}{0:F2}}"
+                                               FontSize="44" FontWeight="Bold"
+                                               Foreground="{StaticResource OrangeBrush}" />
+                                    <TextBlock Text="°C" FontSize="18" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               VerticalAlignment="Bottom" Margin="6,0,0,6" />
+                                </StackPanel>
                             </StackPanel>
                         </Border>
 
@@ -87,11 +90,14 @@
                             <StackPanel>
                                 <TextBlock Text="PRESSURE" FontSize="11" FontWeight="SemiBold"
                                            Foreground="{StaticResource TextSecondaryBrush}" />
-                                <TextBlock Text="{Binding CurrentPressure, StringFormat={}{0:F4}}"
-                                           FontSize="44" FontWeight="Bold"
-                                           Foreground="{StaticResource BlueBrush}" Margin="0,4,0,0" />
-                                <TextBlock Text="bar" FontSize="14"
-                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,4,0,0">
+                                    <TextBlock Text="{Binding CurrentPressure, StringFormat={}{0:F4}}"
+                                               FontSize="44" FontWeight="Bold"
+                                               Foreground="{StaticResource BlueBrush}" />
+                                    <TextBlock Text="bar" FontSize="18" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               VerticalAlignment="Bottom" Margin="6,0,0,6" />
+                                </StackPanel>
                             </StackPanel>
                         </Border>
 
@@ -100,11 +106,14 @@
                             <StackPanel>
                                 <TextBlock Text="MOTOR SPEED" FontSize="11" FontWeight="SemiBold"
                                            Foreground="{StaticResource TextSecondaryBrush}" />
-                                <TextBlock Text="{Binding CurrentMotorSpeed, StringFormat={}{0:F0}}"
-                                           FontSize="44" FontWeight="Bold"
-                                           Foreground="{StaticResource GreenBrush}" Margin="0,4,0,0" />
-                                <TextBlock Text="RPM" FontSize="14"
-                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,4,0,0">
+                                    <TextBlock Text="{Binding CurrentMotorSpeed, StringFormat={}{0:F0}}"
+                                               FontSize="44" FontWeight="Bold"
+                                               Foreground="{StaticResource GreenBrush}" />
+                                    <TextBlock Text="RPM" FontSize="18" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               VerticalAlignment="Bottom" Margin="6,0,0,6" />
+                                </StackPanel>
                             </StackPanel>
                         </Border>
                     </UniformGrid>
