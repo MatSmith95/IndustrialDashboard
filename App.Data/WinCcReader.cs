@@ -157,6 +157,27 @@ public static class WinCcReader
         return null;
     }
 
+    /// <summary>
+    /// Returns the min and max timestamps present in the segment file.
+    /// </summary>
+    public static (DateTime Min, DateTime Max) GetDateRange(string segmentDbPath)
+    {
+        using var con = new SqliteConnection($"Data Source={segmentDbPath};Mode=ReadOnly");
+        con.Open();
+
+        string? tsCol = FindColumn(con, "LoggedProcessValue", new[] { "pk_TimeStamp", "TimeStamp", "Timestamp" });
+        if (tsCol is null) return (DateTime.MinValue, DateTime.MaxValue);
+
+        using var cmd = con.CreateCommand();
+        cmd.CommandText = $"SELECT MIN([{tsCol}]), MAX([{tsCol}]) FROM LoggedProcessValue";
+        using var r = cmd.ExecuteReader();
+        if (r.Read() && !r.IsDBNull(0) && !r.IsDBNull(1))
+        {
+            return (FileTimeToDateTime(r.GetInt64(0)), FileTimeToDateTime(r.GetInt64(1)));
+        }
+        return (DateTime.MinValue, DateTime.MaxValue);
+    }
+
     private static long DateTimeToFileTime(DateTime dt)
         => (dt.ToUniversalTime() - FileTimeEpoch).Ticks;
 }

@@ -25,9 +25,11 @@ public partial class WinCcViewModel : ObservableObject
     [ObservableProperty] private string _tagDbPath = string.Empty;
     [ObservableProperty] private string _statusText = "Select segment and tag .db3 files to begin.";
     [ObservableProperty] private bool _isLoading;
-    [ObservableProperty] private DateTime _fromDate = DateTime.Today.AddDays(-1);
-    [ObservableProperty] private DateTime _toDate = DateTime.Today.AddDays(1);
     [ObservableProperty] private bool _hasNoSeries = true;
+    [ObservableProperty] private string _dateRangeText = "Date range: load tags to detect";
+
+    private DateTime _fromDate = DateTime.MinValue;
+    private DateTime _toDate = DateTime.MaxValue;
 
     public ObservableCollection<TagSelectionItem> AvailableTags { get; } = new();
     public ISeries[] Series { get; private set; } = Array.Empty<ISeries>();
@@ -80,10 +82,14 @@ public partial class WinCcViewModel : ObservableObject
         {
             _tagMap = await Task.Run(() => WinCcReader.LoadTagMap(TagDbPath));
             var tags = await Task.Run(() => WinCcReader.GetAvailableTags(SegmentDbPath, _tagMap));
+            var (minDate, maxDate) = await Task.Run(() => WinCcReader.GetDateRange(SegmentDbPath));
 
             foreach (var (id, name) in tags)
                 AvailableTags.Add(new TagSelectionItem { TagId = id, TagName = name, IsSelected = false });
 
+            _fromDate = minDate;
+            _toDate = maxDate;
+            DateRangeText = $"Range: {minDate:dd MMM yyyy HH:mm} → {maxDate:dd MMM yyyy HH:mm}";
             StatusText = $"{AvailableTags.Count} tags found. Select tags then click Load Data.";
         }
         catch (Exception ex)
