@@ -1,6 +1,6 @@
 using System.Windows.Controls;
 
-namespace App.WPF;
+namespace IndustrialDashboard;
 
 public partial class HistoryView : UserControl
 {

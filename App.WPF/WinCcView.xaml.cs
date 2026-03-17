@@ -1,7 +1,7 @@
 using System.Windows.Controls;
 using Microsoft.Win32;
 
-namespace App.WPF;
+namespace IndustrialDashboard;
 
 public partial class WinCcView : UserControl
 {

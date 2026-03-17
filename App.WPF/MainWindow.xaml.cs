@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using App.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace App.WPF;
+namespace IndustrialDashboard;
 
 public partial class MainWindow : Window
 {
@@ -16,30 +16,32 @@ public partial class MainWindow : Window
         InitializeComponent();
     }
 
-    private void OnHistoryTabSelected(object sender, RoutedEventArgs e)
+    private void MainTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_historyView is null && ServiceProvider is not null)
+        if (e.Source is not TabControl tc) return;
+
+        if (tc.SelectedItem is TabItem selected)
         {
-            var historyVm = ServiceProvider.GetRequiredService<HistoryViewModel>();
-            _historyView = new HistoryView { DataContext = historyVm };
-            HistoryContainer.Children.Add(_historyView);
+            if (ReferenceEquals(selected, HistoryTab))
+                EnsureHistoryView();
+            else if (ReferenceEquals(selected, WinCcTab))
+                EnsureWinCcView();
         }
     }
 
-    private void OnWinCcTabSelected(object sender, RoutedEventArgs e)
+    private void EnsureHistoryView()
     {
-        if (_winCcView is null && ServiceProvider is not null)
-        {
-            var winCcVm = ServiceProvider.GetRequiredService<WinCcViewModel>();
-            _winCcView = new WinCcView { DataContext = winCcVm };
-            WinCcContainer.Children.Add(_winCcView);
-        }
+        if (_historyView is not null || ServiceProvider is null) return;
+        var vm = ServiceProvider.GetRequiredService<HistoryViewModel>();
+        _historyView = new HistoryView { DataContext = vm };
+        HistoryContainer.Children.Add(_historyView);
     }
 
-    protected override void OnInitialized(EventArgs e)
+    private void EnsureWinCcView()
     {
-        base.OnInitialized(e);
-        HistoryTab.Selected += OnHistoryTabSelected;
-        WinCcTab.Selected   += OnWinCcTabSelected;
+        if (_winCcView is not null || ServiceProvider is null) return;
+        var vm = ServiceProvider.GetRequiredService<WinCcViewModel>();
+        _winCcView = new WinCcView { DataContext = vm };
+        WinCcContainer.Children.Add(_winCcView);
     }
 }

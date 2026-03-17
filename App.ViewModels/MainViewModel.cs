@@ -44,7 +44,7 @@ public partial class MainViewModel : ObservableObject
     {
         new Axis
         {
-            TextBrush = new SolidColorPaint(new SKColor(0x9E, 0x9E, 0x9E)),
+            LabelsPaint = new SolidColorPaint(new SKColor(0x9E, 0x9E, 0x9E)),
             SeparatorsPaint = null
         }
     };

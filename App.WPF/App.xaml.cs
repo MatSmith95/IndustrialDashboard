@@ -5,7 +5,7 @@ using App.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace App.WPF;
+namespace IndustrialDashboard;
 
 public partial class App : Application
 {
