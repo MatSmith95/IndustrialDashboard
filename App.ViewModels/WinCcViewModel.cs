@@ -27,9 +27,30 @@ public partial class WinCcViewModel : ObservableObject
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private DateTime _fromDate = DateTime.Today.AddDays(-1);
     [ObservableProperty] private DateTime _toDate = DateTime.Today.AddDays(1);
+    [ObservableProperty] private bool _hasNoSeries = true;
 
     public ObservableCollection<TagSelectionItem> AvailableTags { get; } = new();
     public ISeries[] Series { get; private set; } = Array.Empty<ISeries>();
+
+    // X axis with timestamp labelling — configured in code to avoid XAML limitations
+    public Axis[] XAxes { get; } = new[]
+    {
+        new Axis
+        {
+            TextBrush = new SolidColorPaint(new SKColor(0x9E, 0x9E, 0x9E)),
+            SeparatorsPaint = null,
+            Labeler = value => new DateTime((long)value).ToString("HH:mm:ss")
+        }
+    };
+
+    public Axis[] YAxes { get; } = new[]
+    {
+        new Axis
+        {
+            TextBrush = new SolidColorPaint(new SKColor(0x9E, 0x9E, 0x9E)),
+            SeparatorsPaint = null
+        }
+    };
 
     private Dictionary<long, string> _tagMap = new();
 
@@ -99,15 +120,16 @@ public partial class WinCcViewModel : ObservableObject
 
             foreach (var group in grouped)
             {
+                // Use ObservablePoint with Timestamp.Ticks as X so our Axis labeler can format it
                 var points = group
                     .OrderBy(d => d.Timestamp)
-                    .Select(d => new DateTimePoint(d.Timestamp, d.Value))
+                    .Select(d => new ObservablePoint(d.Timestamp.Ticks, d.Value))
                     .ToList();
 
                 var colour = Palette[colourIdx % Palette.Length];
                 colourIdx++;
 
-                newSeries.Add(new LineSeries<DateTimePoint>
+                newSeries.Add(new LineSeries<ObservablePoint>
                 {
                     Name   = group.First().TagName,
                     Values = points,
@@ -119,6 +141,7 @@ public partial class WinCcViewModel : ObservableObject
             }
 
             Series = newSeries.ToArray();
+            HasNoSeries = Series.Length == 0;
             OnPropertyChanged(nameof(Series));
 
             long totalPoints = grouped.Sum(g => g.LongCount());

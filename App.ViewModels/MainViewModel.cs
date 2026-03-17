@@ -35,6 +35,20 @@ public partial class MainViewModel : ObservableObject
 
     public ISeries[] Series { get; }
 
+    public Axis[] XAxes { get; } = new[]
+    {
+        new Axis { IsVisible = false, SeparatorsPaint = null }
+    };
+
+    public Axis[] YAxes { get; } = new[]
+    {
+        new Axis
+        {
+            TextBrush = new SolidColorPaint(new SKColor(0x9E, 0x9E, 0x9E)),
+            SeparatorsPaint = null
+        }
+    };
+
     public MainViewModel(IPlcService plcService, DataLoggingService loggingService, Dispatcher dispatcher)
     {
         _plcService     = plcService;
