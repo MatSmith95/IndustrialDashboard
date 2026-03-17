@@ -95,7 +95,7 @@
 
         <!-- ── Chart area ── -->
         <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" CornerRadius="8">
-
+            <Grid>
             <!-- Overlay mode (default visible, hidden in split mode via code-behind) -->
             <lvc:CartesianChart x:Name="OverlayChart"
                                 Series="{Binding OverlaySeries}"
@@ -124,6 +124,7 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
             </ScrollViewer>
+            </Grid>
         </Border>
 
         <!-- ── Time range slider ── -->
