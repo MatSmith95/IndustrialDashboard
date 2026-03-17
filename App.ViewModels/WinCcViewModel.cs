@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Media;
 using App.Data;
 using App.Models;
@@ -12,7 +13,7 @@ using SkiaSharp;
 
 namespace App.ViewModels;
 
-public partial class WinCcViewModel : ObservableObject
+public partial class WinCcViewModel : ObservableObject, IDisposable
 {
     // ── View mode ──────────────────────────────────────────────────────────────
     [ObservableProperty] private bool _isConfigureMode = true;
@@ -50,6 +51,21 @@ public partial class WinCcViewModel : ObservableObject
 
     // ── Cursor values ──────────────────────────────────────────────────────────
     [ObservableProperty] private string _cursorText = string.Empty;
+
+    // ── Live acquisition ───────────────────────────────────────────────────────
+    [ObservableProperty] private bool _isLiveRunning;
+    [ObservableProperty] private string _liveStatusText = string.Empty;
+    [ObservableProperty] private string _liveButtonLabel = "▶ Start Live";
+    [ObservableProperty] private bool _isRollingMode = false;      // false = append, true = rolling
+    [ObservableProperty] private int _rollingWindowSize = 1000;    // points per tag in rolling mode
+    [ObservableProperty] private int _pollIntervalSeconds = 2;
+
+    public static readonly int[] PollIntervalOptions = { 1, 2, 5, 10, 30 };
+    public static readonly string[] LiveModeOptions = { "Append", "Rolling Window" };
+
+    private LiveAcquisitionService? _liveService;
+    private readonly System.Windows.Threading.Dispatcher _dispatcher =
+        System.Windows.Threading.Dispatcher.CurrentDispatcher;
 
     // ── Chart data ─────────────────────────────────────────────────────────────
     private Dictionary<long, string> _tagMap = new();
@@ -215,8 +231,108 @@ public partial class WinCcViewModel : ObservableObject
     [RelayCommand]
     private void GoToConfigure()
     {
+        // Stop live acquisition if running before going back to configure
+        if (IsLiveRunning) _ = StopLiveAsync();
         IsConfigureMode = true;
         ConfigureGraphLabel = "▶ Plot Graph";
+    }
+
+    [RelayCommand]
+    private async Task ToggleLiveAsync()
+    {
+        if (IsLiveRunning)
+            await StopLiveAsync();
+        else
+            await StartLiveAsync();
+    }
+
+    private async Task StartLiveAsync()
+    {
+        if (Tags.Count == 0 || string.IsNullOrWhiteSpace(SegmentDbPath))
+        {
+            LiveStatusText = "Plot data first before starting live acquisition.";
+            return;
+        }
+
+        var tagIds  = Tags.Where(t => t.IsVisible).Select(t => t.TagId).ToList();
+        // Resume from latest point already loaded
+        var latest  = Tags.Where(t => t.Points.Count > 0)
+                          .SelectMany(t => t.Points)
+                          .Select(p => new DateTime((long)p.X!.Value))
+                          .DefaultIfEmpty(DateTime.UtcNow)
+                          .Max();
+
+        _liveService = new LiveAcquisitionService();
+        _liveService.NewDataArrived += OnLiveDataArrived;
+
+        await _liveService.StartAsync(
+            SegmentDbPath, _tagMap, tagIds, latest,
+            TimeSpan.FromSeconds(PollIntervalSeconds));
+
+        IsLiveRunning = true;
+        LiveButtonLabel = "⏹ Stop Live";
+        LiveStatusText = $"Live — polling every {PollIntervalSeconds}s — {(IsRollingMode ? $"rolling {RollingWindowSize} pts" : "append mode")}";
+    }
+
+    private async Task StopLiveAsync()
+    {
+        if (_liveService is not null)
+        {
+            _liveService.NewDataArrived -= OnLiveDataArrived;
+            await _liveService.StopAsync();
+            _liveService.Dispose();
+            _liveService = null;
+        }
+        IsLiveRunning = false;
+        LiveButtonLabel = "▶ Start Live";
+        LiveStatusText = "Live stopped.";
+    }
+
+    private void OnLiveDataArrived(object? sender, List<WinCcDataPoint> newPoints)
+    {
+        if (newPoints.Count == 0) return;
+
+        _dispatcher.BeginInvoke(() =>
+        {
+            // Group new points by tag
+            var byTag = newPoints.GroupBy(p => p.TagId).ToDictionary(g => g.Key, g => g.ToList());
+
+            foreach (var cfg in Tags)
+            {
+                if (!byTag.TryGetValue(cfg.TagId, out var pts)) continue;
+
+                var newObs = pts
+                    .OrderBy(p => p.Timestamp)
+                    .Select(p => new ObservablePoint(p.Timestamp.Ticks, p.Value))
+                    .ToList();
+
+                if (IsRollingMode)
+                {
+                    // Drop old points from front to maintain window size
+                    foreach (var pt in newObs)
+                        cfg.Points.Add(pt);
+
+                    int excess = cfg.Points.Count - RollingWindowSize;
+                    if (excess > 0)
+                        cfg.Points.RemoveRange(0, excess);
+                }
+                else
+                {
+                    // Append mode — just add
+                    cfg.Points.AddRange(newObs);
+                }
+            }
+
+            // Rebuild chart with updated points
+            RebuildCharts(Tags.Where(t => t.IsVisible).ToList());
+
+            LiveStatusText = $"Live — last update {DateTime.Now:HH:mm:ss} — +{newPoints.Count} points";
+        });
+    }
+
+    public void Dispose()
+    {
+        _ = StopLiveAsync();
     }
 
     [RelayCommand]

@@ -32,6 +32,7 @@ public partial class App : Application
             Current.Dispatcher));
         services.AddTransient<HistoryViewModel>();
         services.AddTransient<WinCcViewModel>();
+        services.AddTransient<LiveAcquisitionService>();
 
         // Views
         services.AddSingleton<MainWindow>();

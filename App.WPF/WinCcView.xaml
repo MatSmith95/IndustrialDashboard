@@ -10,6 +10,7 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <local:HexToColorBrushConverter x:Key="HexBrush" />
         <local:InverseBoolToVisibilityConverter x:Key="InvBoolToVis" />
+        <local:BoolToIndexConverter x:Key="BoolToIndexConverter" />
     </UserControl.Resources>
 
     <Grid>
@@ -302,12 +303,13 @@
             <!-- ── GRAPH VIEW ── -->
             <Grid Visibility="{Binding IsConfigureMode, Converter={StaticResource InvBoolToVis}}">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />      <!-- Chart -->
-                    <RowDefinition Height="Auto" />   <!-- Time slider -->
-                    <RowDefinition Height="Auto" />   <!-- Cursor values -->
-                    <RowDefinition Height="Auto" />   <!-- Panel toggle -->
-                    <RowDefinition Height="Auto" />   <!-- Signals panel -->
-                    <RowDefinition Height="Auto" />   <!-- Status -->
+                    <RowDefinition Height="*" />      <!-- Row 0: Chart -->
+                    <RowDefinition Height="Auto" />   <!-- Row 1: Time slider -->
+                    <RowDefinition Height="Auto" />   <!-- Row 2: Cursor values -->
+                    <RowDefinition Height="Auto" />   <!-- Row 3: Live acquisition bar -->
+                    <RowDefinition Height="Auto" />   <!-- Row 4: Panel toggle -->
+                    <RowDefinition Height="Auto" />   <!-- Row 5: Signals panel -->
+                    <RowDefinition Height="Auto" />   <!-- Row 6: Status -->
                 </Grid.RowDefinitions>
 
                 <!-- Chart area -->
@@ -382,8 +384,70 @@
                                TextTrimming="CharacterEllipsis" />
                 </Border>
 
+                <!-- Live acquisition bar -->
+                <Border Grid.Row="3" Background="{StaticResource SurfaceBrush}"
+                        CornerRadius="8" Padding="10,8" Margin="0,4,0,0">
+                    <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+
+                        <!-- Start/Stop button -->
+                        <Button Content="{Binding LiveButtonLabel}"
+                                Command="{Binding ToggleLiveCommand}"
+                                Style="{StaticResource PrimaryButton}"
+                                Background="#FF22883E" Padding="12,5" FontSize="11"
+                                Margin="0,0,12,0"/>
+
+                        <!-- Mode selector -->
+                        <TextBlock Text="Mode:" VerticalAlignment="Center" FontSize="11"
+                                   Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,6,0"/>
+                        <ComboBox SelectedIndex="{Binding IsRollingMode, Converter={StaticResource BoolToIndexConverter}}"
+                                  Width="150" FontSize="11" Margin="0,0,12,0"
+                                  Background="{StaticResource CardBrush}"
+                                  Foreground="{StaticResource TextPrimaryBrush}">
+                            <ComboBoxItem>Append</ComboBoxItem>
+                            <ComboBoxItem>Rolling Window</ComboBoxItem>
+                        </ComboBox>
+
+                        <!-- Rolling window size (only relevant in rolling mode) -->
+                        <StackPanel Orientation="Horizontal"
+                                    Visibility="{Binding IsRollingMode, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="Window (pts):" VerticalAlignment="Center" FontSize="11"
+                                       Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,6,0"/>
+                            <ComboBox SelectedItem="{Binding RollingWindowSize}"
+                                      Width="80" FontSize="11" Margin="0,0,12,0"
+                                      Background="{StaticResource CardBrush}"
+                                      Foreground="{StaticResource TextPrimaryBrush}">
+                                <ComboBoxItem>500</ComboBoxItem>
+                                <ComboBoxItem>1000</ComboBoxItem>
+                                <ComboBoxItem>2000</ComboBoxItem>
+                                <ComboBoxItem>5000</ComboBoxItem>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <!-- Poll interval -->
+                        <TextBlock Text="Poll every:" VerticalAlignment="Center" FontSize="11"
+                                   Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,6,0"/>
+                        <ComboBox SelectedItem="{Binding PollIntervalSeconds}"
+                                  Width="60" FontSize="11" Margin="0,0,16,0"
+                                  Background="{StaticResource CardBrush}"
+                                  Foreground="{StaticResource TextPrimaryBrush}">
+                            <ComboBoxItem>1</ComboBoxItem>
+                            <ComboBoxItem>2</ComboBoxItem>
+                            <ComboBoxItem>5</ComboBoxItem>
+                            <ComboBoxItem>10</ComboBoxItem>
+                            <ComboBoxItem>30</ComboBoxItem>
+                        </ComboBox>
+                        <TextBlock Text="s" VerticalAlignment="Center" FontSize="11"
+                                   Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,16,0"/>
+
+                        <!-- Live status -->
+                        <TextBlock Text="{Binding LiveStatusText}" FontSize="11"
+                                   Foreground="{StaticResource GreenBrush}"
+                                   VerticalAlignment="Center"/>
+                    </WrapPanel>
+                </Border>
+
                 <!-- Signals panel toggle -->
-                <Button Grid.Row="3" Content="{Binding PanelToggleLabel}"
+                <Button Grid.Row="4" Content="{Binding PanelToggleLabel}"
                         Command="{Binding TogglePanelCommand}"
                         Background="{StaticResource CardBrush}"
                         Foreground="{StaticResource TextSecondaryBrush}"
@@ -391,7 +455,7 @@
                         FontSize="11" HorizontalAlignment="Left" Margin="0,4,0,0"/>
 
                 <!-- Signals panel -->
-                <Border Grid.Row="4"
+                <Border Grid.Row="5"
                         Visibility="{Binding IsPanelVisible, Converter={StaticResource BoolToVis}}"
                         Background="{StaticResource SurfaceBrush}"
                         CornerRadius="8" Margin="0,4,0,0" MaxHeight="200">
@@ -510,7 +574,7 @@
                 </Border>
 
                 <!-- Status -->
-                <TextBlock Grid.Row="5" Text="{Binding StatusText}" FontSize="11"
+                <TextBlock Grid.Row="6" Text="{Binding StatusText}" FontSize="11"
                            Foreground="{StaticResource TextSecondaryBrush}" Margin="4,6,0,0"/>
             </Grid>
         </Grid>

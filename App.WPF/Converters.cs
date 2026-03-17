@@ -22,6 +22,16 @@ public class HexToColorBrushConverter : IValueConverter
         => throw new NotImplementedException();
 }
 
+/// <summary>Converts bool to ComboBox index: false=0 (Append), true=1 (Rolling).</summary>
+public class BoolToIndexConverter : IValueConverter
+{
+    public static readonly BoolToIndexConverter Instance = new();
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is bool b && b ? 1 : 0;
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is int i && i == 1;
+}
+
 public class InverseBoolToVisibilityConverter : IValueConverter
 {
     public static readonly InverseBoolToVisibilityConverter Instance = new();
