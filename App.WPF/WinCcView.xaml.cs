@@ -1,5 +1,6 @@
 using System.Windows.Controls;
 using Microsoft.Win32;
+using WinCcVm = App.ViewModels.WinCcViewModel;
 
 namespace IndustrialDashboard;
 
@@ -17,7 +18,7 @@ public partial class WinCcView : UserControl
             Title  = "Select WinCC Segment .db3 File",
             Filter = "SQLite Database (*.db3;*.db)|*.db3;*.db|All Files (*.*)|*.*"
         };
-        if (dlg.ShowDialog() == true && DataContext is App.ViewModels.WinCcViewModel vm)
+        if (dlg.ShowDialog() == true && DataContext is WinCcVm vm)
             vm.SetSegmentDb(dlg.FileName);
     }
 
@@ -28,7 +29,7 @@ public partial class WinCcView : UserControl
             Title  = "Select WinCC Tag Map .db3 File",
             Filter = "SQLite Database (*.db3;*.db)|*.db3;*.db|All Files (*.*)|*.*"
         };
-        if (dlg.ShowDialog() == true && DataContext is App.ViewModels.WinCcViewModel vm)
+        if (dlg.ShowDialog() == true && DataContext is WinCcVm vm)
             vm.SetTagDb(dlg.FileName);
     }
 }
