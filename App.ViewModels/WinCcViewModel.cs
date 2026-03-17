@@ -195,11 +195,15 @@ public partial class WinCcViewModel : ObservableObject
             }
 
             SyncGroupScales(Tags.ToList());
+
+            // Subscribe to each tag so chart rebuilds immediately when signals table is edited
+            foreach (var cfg in Tags)
+                cfg.PropertyChanged += OnTagConfigChanged;
+
             RebuildCharts(Tags.Where(t => t.IsVisible).ToList());
 
             long total = grouped.Values.Sum(v => v.LongCount());
             StatusText = $"Plotted {total:N0} points across {selected.Count} tags.";
-            ConfigureGraphLabel = "⚙ Configure";
         }
         catch (Exception ex)
         {
@@ -209,10 +213,10 @@ public partial class WinCcViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void ToggleConfigureGraph()
+    private void GoToConfigure()
     {
-        IsConfigureMode = !IsConfigureMode;
-        ConfigureGraphLabel = IsConfigureMode ? "▶ Plot Graph" : "⚙ Configure";
+        IsConfigureMode = true;
+        ConfigureGraphLabel = "▶ Plot Graph";
     }
 
     [RelayCommand]
@@ -227,6 +231,21 @@ public partial class WinCcViewModel : ObservableObject
     {
         IsPanelVisible = !IsPanelVisible;
         PanelToggleLabel = IsPanelVisible ? "▼ Hide Signals" : "▲ Show Signals";
+    }
+
+    // ── Immediate chart rebuild on signals table edit ──────────────────────────
+
+    private void OnTagConfigChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        // Rebuild when visibility, group, or scale changes
+        if (e.PropertyName is nameof(TagConfig.IsVisible) or nameof(TagConfig.GroupId)
+                           or nameof(TagConfig.MinY) or nameof(TagConfig.MaxY)
+                           or nameof(TagConfig.ColorHex))
+        {
+            if (e.PropertyName == nameof(TagConfig.GroupId))
+                SyncGroupScales(Tags.ToList());
+            RebuildCharts(Tags.Where(t => t.IsVisible).ToList());
+        }
     }
 
     // ── Slider ─────────────────────────────────────────────────────────────────

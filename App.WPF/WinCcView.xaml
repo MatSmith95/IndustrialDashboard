@@ -65,11 +65,21 @@
                            Foreground="{StaticResource TextSecondaryBrush}"
                            VerticalAlignment="Center" Margin="16,0"/>
 
-                <!-- Configure / Graph toggle -->
-                <Button Grid.Column="4" Content="{Binding ConfigureGraphLabel}"
+                <!-- Plot button (shown in configure mode) -->
+                <Button Grid.Column="4" Content="▶ Plot Graph"
                         Command="{Binding PlotCommand}"
                         Style="{StaticResource PrimaryButton}"
-                        Background="#FF22883E" Padding="14,5" FontSize="11" Margin="0,0,8,0"/>
+                        Background="#FF22883E" Padding="14,5" FontSize="11" Margin="0,0,8,0"
+                        Visibility="{Binding IsConfigureMode, Converter={StaticResource BoolToVis}}"/>
+
+                <!-- Configure button (shown in graph mode) -->
+                <Button Grid.Column="4" Content="⚙ Configure"
+                        Command="{Binding GoToConfigureCommand}"
+                        Background="{StaticResource CardBrush}"
+                        Foreground="{StaticResource TextSecondaryBrush}"
+                        BorderBrush="Transparent" Padding="14,5" Cursor="Hand" FontSize="11"
+                        Margin="0,0,8,0"
+                        Visibility="{Binding IsConfigureMode, Converter={StaticResource InvBoolToVis}}"/>
 
                 <!-- Split/Overlay (graph mode only) -->
                 <Button Grid.Column="5" Content="{Binding ChartModeLabel}"
@@ -194,19 +204,41 @@
                         </DataGrid.ColumnHeaderStyle>
 
                         <DataGrid.Columns>
-                            <!-- Select checkbox -->
-                            <DataGridCheckBoxColumn Header="☑" Width="36"
-                                Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}"/>
-
-                            <!-- Color swatch -->
-                            <DataGridTemplateColumn Header="Color" Width="50">
+                            <!-- Single-click checkbox (template col avoids double-click) -->
+                            <DataGridTemplateColumn Header="☑" Width="36">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Rectangle Width="24" Height="14" RadiusX="3" RadiusY="3"
+                                        <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Color picker — dropdown of colour swatches -->
+                            <DataGridTemplateColumn Header="Color" Width="70">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Rectangle Width="32" Height="14" RadiusX="3" RadiusY="3"
                                                    Fill="{Binding ColorHex, Converter={StaticResource HexBrush}}"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.CellEditingTemplate>
+                                    <DataTemplate>
+                                        <ComboBox SelectedItem="{Binding ColorHex, UpdateSourceTrigger=PropertyChanged}"
+                                                  ItemsSource="{x:Static vm:TagConfig.ColorPalette}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Rectangle Width="32" Height="12" RadiusX="3" RadiusY="3"
+                                                                   Fill="{Binding Converter={StaticResource HexBrush}}"
+                                                                   Margin="0,0,6,0"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellEditingTemplate>
                             </DataGridTemplateColumn>
 
                             <!-- Tag name -->
@@ -222,7 +254,7 @@
                             </DataGridTextColumn>
 
                             <!-- Min value -->
-                            <DataGridTextColumn Header="Min" Width="90" IsReadOnly="True"
+                            <DataGridTextColumn Header="Min" Width="Auto" IsReadOnly="True"
                                                Binding="{Binding MinValue, StringFormat={}{0:F3}}">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -235,7 +267,7 @@
                             </DataGridTextColumn>
 
                             <!-- Max value -->
-                            <DataGridTextColumn Header="Max" Width="90" IsReadOnly="True"
+                            <DataGridTextColumn Header="Max" Width="Auto" IsReadOnly="True"
                                                Binding="{Binding MaxValue, StringFormat={}{0:F3}}">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -248,7 +280,7 @@
                             </DataGridTextColumn>
 
                             <!-- Point count -->
-                            <DataGridTextColumn Header="Points" Width="80" IsReadOnly="True"
+                            <DataGridTextColumn Header="Points" Width="Auto" IsReadOnly="True"
                                                Binding="{Binding Points, StringFormat={}{0:N0}}">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -388,23 +420,39 @@
                             </DataGrid.ColumnHeaderStyle>
 
                             <DataGrid.Columns>
-                                <DataGridCheckBoxColumn Header="👁" Width="36"
-                                    Binding="{Binding IsVisible, UpdateSourceTrigger=PropertyChanged}"/>
-
-                                <!-- Color swatch (read display) -->
-                                <DataGridTemplateColumn Header="Color" Width="50">
+                                <!-- Single-click visibility toggle -->
+                                <DataGridTemplateColumn Header="👁" Width="36">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Rectangle Width="24" Height="14" RadiusX="3" RadiusY="3"
-                                                       Fill="{Binding ColorHex, Converter={StaticResource HexBrush}}"
-                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <CheckBox IsChecked="{Binding IsVisible, UpdateSourceTrigger=PropertyChanged}"
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
-                                <DataGridComboBoxColumn Header="Color (edit)" Width="110"
-                                    SelectedItemBinding="{Binding ColorHex, UpdateSourceTrigger=PropertyChanged}"
-                                    ItemsSource="{x:Static vm:TagConfig.ColorPalette}"/>
+                                <!-- Color — swatch display, dropdown to change -->
+                                <DataGridTemplateColumn Header="Color" Width="70">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Rectangle Width="32" Height="14" RadiusX="3" RadiusY="3"
+                                                       Fill="{Binding ColorHex, Converter={StaticResource HexBrush}}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                    <DataGridTemplateColumn.CellEditingTemplate>
+                                        <DataTemplate>
+                                            <ComboBox SelectedItem="{Binding ColorHex, UpdateSourceTrigger=PropertyChanged}"
+                                                      ItemsSource="{x:Static vm:TagConfig.ColorPalette}">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Rectangle Width="32" Height="12" RadiusX="3" RadiusY="3"
+                                                                   Fill="{Binding Converter={StaticResource HexBrush}}"/>
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellEditingTemplate>
+                                </DataGridTemplateColumn>
 
                                 <DataGridTextColumn Header="Tag Name" Binding="{Binding TagName}"
                                                    Width="*" IsReadOnly="True">
@@ -417,11 +465,11 @@
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
 
-                                <DataGridComboBoxColumn Header="Group" Width="60"
+                                <DataGridComboBoxColumn Header="Group" Width="Auto"
                                     SelectedItemBinding="{Binding GroupId, UpdateSourceTrigger=PropertyChanged}"
                                     ItemsSource="{x:Static vm:TagConfig.AvailableGroups}"/>
 
-                                <DataGridTextColumn Header="Min Y" Width="90"
+                                <DataGridTextColumn Header="Min Y" Width="Auto"
                                     Binding="{Binding MinY, StringFormat={}{0:F3}, UpdateSourceTrigger=PropertyChanged}">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
@@ -433,7 +481,7 @@
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
 
-                                <DataGridTextColumn Header="Max Y" Width="90"
+                                <DataGridTextColumn Header="Max Y" Width="Auto"
                                     Binding="{Binding MaxY, StringFormat={}{0:F3}, UpdateSourceTrigger=PropertyChanged}">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
