@@ -117,7 +117,7 @@ public partial class WinCcViewModel : ObservableObject
             var tagIds = selectedTags.Select(t => t.TagId).ToList();
 
             var data = await Task.Run(() =>
-                WinCcReader.LoadSegmentData(SegmentDbPath, _tagMap, tagIds, FromDate, ToDate));
+                WinCcReader.LoadSegmentData(SegmentDbPath, _tagMap, tagIds, _fromDate, _toDate));
 
             // Group by tag and build series
             var grouped = data.GroupBy(d => d.TagId).ToList();
@@ -151,7 +151,7 @@ public partial class WinCcViewModel : ObservableObject
             OnPropertyChanged(nameof(Series));
 
             long totalPoints = grouped.Sum(g => g.LongCount());
-            StatusText = $"Loaded {totalPoints:N0} data points across {grouped.Count} tag(s). Range: {FromDate:dd MMM} – {ToDate:dd MMM}.";
+            StatusText = $"Loaded {totalPoints:N0} data points across {grouped.Count} tag(s). Range: {_fromDate:dd MMM} – {_toDate:dd MMM}.";
         }
         catch (Exception ex)
         {
