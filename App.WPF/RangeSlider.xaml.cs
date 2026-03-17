@@ -96,8 +96,8 @@ public partial class RangeSlider : UserControl
         SelectionHighlight.Width  = Math.Max(0, selWidth);
 
         // Labels
-        LowerLabel.Text = LowerLabel.GetValue(TextBlock.TextProperty) as string ?? "";
-        UpperLabel.Text = UpperLabel.GetValue(TextBlock.TextProperty) as string ?? "";
+        LowerLabelText.Text = LowerLabel;
+        UpperLabelText.Text = UpperLabel;
     }
 
     private double GetTrackWidth()

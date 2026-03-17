@@ -319,7 +319,7 @@ public partial class WinCcViewModel : ObservableObject
                     GeometrySize   = 0,
                     LineSmoothness = 0,
                     ScalesYAt      = axisIdx,
-                    TooltipLabelFormatter = _ => string.Empty  // disable tooltip
+                    XToolTipLabelFormatter = _ => string.Empty  // disable tooltip
                 });
             }
             axisIdx++;
@@ -344,7 +344,7 @@ public partial class WinCcViewModel : ObservableObject
                 Fill           = null,
                 GeometrySize   = 0,
                 LineSmoothness = 0,
-                TooltipLabelFormatter = _ => string.Empty
+                XToolTipLabelFormatter = _ => string.Empty
             }).ToArray();
 
             GroupCharts.Add(new GroupChartVm

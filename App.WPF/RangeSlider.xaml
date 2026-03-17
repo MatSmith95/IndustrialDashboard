@@ -38,9 +38,9 @@
 
         <!-- Labels -->
         <Grid Grid.Row="1" Margin="10,4,10,0">
-            <TextBlock x:Name="LowerLabel" Text="" FontSize="10"
+            <TextBlock x:Name="LowerLabelText" Text="" FontSize="10"
                        Foreground="#FF9E9E9E" HorizontalAlignment="Left" />
-            <TextBlock x:Name="UpperLabel" Text="" FontSize="10"
+            <TextBlock x:Name="UpperLabelText" Text="" FontSize="10"
                        Foreground="#FF9E9E9E" HorizontalAlignment="Right" />
         </Grid>
     </Grid>
