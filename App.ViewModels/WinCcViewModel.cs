@@ -229,6 +229,68 @@ public partial class WinCcViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private async Task ExportCsvAsync(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath)) return;
+        var visibleTags = Tags.Where(t => t.IsVisible && t.Points.Count > 0).ToList();
+        if (!visibleTags.Any()) { StatusText = "No data to export."; return; }
+
+        StatusText = "Exporting CSV…";
+        try
+        {
+            await Task.Run(() =>
+            {
+                // Build a merged time-series: all unique timestamps across all tags
+                var allTimestamps = visibleTags
+                    .SelectMany(t => t.Points.Select(p => p.X!.Value))
+                    .Distinct()
+                    .OrderBy(x => x)
+                    .ToList();
+
+                using var writer = new System.IO.StreamWriter(filePath, false, System.Text.Encoding.UTF8);
+
+                // Header: Timestamp, TagName1, TagName2, ...
+                writer.Write("Timestamp");
+                foreach (var tag in visibleTags)
+                    writer.Write($",{EscapeCsv(tag.TagName)}");
+                writer.WriteLine();
+
+                // Build lookup per tag: tick → value
+                var lookup = visibleTags.ToDictionary(
+                    t => t.TagId,
+                    t => t.Points.Where(p => p.X.HasValue && p.Y.HasValue)
+                                 .ToDictionary(p => p.X!.Value, p => p.Y!.Value));
+
+                foreach (var tick in allTimestamps)
+                {
+                    var dt = new DateTime((long)tick);
+                    writer.Write(dt.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                    foreach (var tag in visibleTags)
+                    {
+                        writer.Write(",");
+                        if (lookup[tag.TagId].TryGetValue(tick, out double val))
+                            writer.Write(val.ToString("G6", System.Globalization.CultureInfo.InvariantCulture));
+                    }
+                    writer.WriteLine();
+                }
+            });
+
+            StatusText = $"Exported {filePath.Split('\\', '/').Last()}";
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Export failed: {ex.Message}";
+        }
+    }
+
+    private static string EscapeCsv(string s)
+    {
+        if (s.Contains(',') || s.Contains('"') || s.Contains('\n'))
+            return $"\"{s.Replace("\"", "\"\"")}\"";
+        return s;
+    }
+
+    [RelayCommand]
     private void GoToConfigure()
     {
         // Stop live acquisition if running before going back to configure

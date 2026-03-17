@@ -4,6 +4,7 @@ using System.Windows.Input;
 using LiveChartsCore.SkiaSharpView.WPF;
 using Microsoft.Win32;
 using WinCcVm = App.ViewModels.WinCcViewModel;
+using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 
 namespace IndustrialDashboard;
 
@@ -57,6 +58,19 @@ public partial class WinCcView : UserControl
             vm.UpdateCursorValues(xTick, vm.Tags);
         }
         catch { /* ignore errors during hover */ }
+    }
+
+    private async void ExportCsv_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not WinCcVm vm) return;
+        var dlg = new SaveFileDialog
+        {
+            Title  = "Export Chart Data as CSV",
+            Filter = "CSV Files (*.csv)|*.csv|All Files (*.*)|*.*",
+            FileName = $"wincc-export-{DateTime.Now:yyyy-MM-dd-HHmmss}.csv"
+        };
+        if (dlg.ShowDialog() == true)
+            await vm.ExportCsvCommand.ExecuteAsync(dlg.FileName);
     }
 
     private void BrowseSegment_Click(object sender, RoutedEventArgs e)

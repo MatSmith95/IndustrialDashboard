@@ -27,6 +27,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
@@ -82,8 +83,17 @@
                         Margin="0,0,8,0"
                         Visibility="{Binding IsConfigureMode, Converter={StaticResource InvBoolToVis}}"/>
 
+                <!-- Export CSV (graph mode only) -->
+                <Button Grid.Column="5" Content="📥 Export CSV"
+                        Click="ExportCsv_Click"
+                        Background="{StaticResource CardBrush}"
+                        Foreground="{StaticResource TextSecondaryBrush}"
+                        BorderBrush="Transparent" Padding="12,5" Cursor="Hand" FontSize="11"
+                        Margin="0,0,8,0"
+                        Visibility="{Binding IsConfigureMode, Converter={StaticResource InvBoolToVis}}"/>
+
                 <!-- Split/Overlay (graph mode only) -->
-                <Button Grid.Column="5" Content="{Binding ChartModeLabel}"
+                <Button Grid.Column="6" Content="{Binding ChartModeLabel}"
                         Command="{Binding ToggleChartModeCommand}"
                         Background="{StaticResource CardBrush}"
                         Foreground="{StaticResource TextSecondaryBrush}"
@@ -92,7 +102,7 @@
                         Visibility="{Binding IsConfigureMode, Converter={StaticResource InvBoolToVis}}"/>
 
                 <!-- Loading bar -->
-                <ProgressBar Grid.Column="6" IsIndeterminate="True" Width="80" Height="4"
+                <ProgressBar Grid.Column="7" IsIndeterminate="True" Width="80" Height="4"
                              Foreground="{StaticResource AccentBrush}" Background="Transparent"
                              BorderBrush="Transparent"
                              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"/>
