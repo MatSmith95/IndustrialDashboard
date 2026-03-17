@@ -51,6 +51,23 @@ public static class WinCcReader
         return result;
     }
 
+    /// <summary>Get per-tag stats: pk_fk_id -> (min, max, count).</summary>
+    public static Dictionary<long, (double Min, double Max, long Count)> GetTagStats(string segmentDbPath)
+    {
+        var result = new Dictionary<long, (double, double, long)>();
+        using var con = new SqliteConnection($"Data Source={segmentDbPath};Mode=ReadOnly");
+        con.Open();
+        using var cmd = con.CreateCommand();
+        cmd.CommandText = "SELECT pk_fk_id, MIN(Value), MAX(Value), COUNT(*) FROM LoggedProcessValue GROUP BY pk_fk_id";
+        using var r = cmd.ExecuteReader();
+        while (r.Read())
+        {
+            if (!r.IsDBNull(0) && !r.IsDBNull(1) && !r.IsDBNull(2) && !r.IsDBNull(3))
+                result[r.GetInt64(0)] = (r.GetDouble(1), r.GetDouble(2), r.GetInt64(3));
+        }
+        return result;
+    }
+
     /// <summary>Get the min/max timestamp range from the segment file.</summary>
     public static (DateTime Min, DateTime Max) GetDateRange(string segmentDbPath)
     {

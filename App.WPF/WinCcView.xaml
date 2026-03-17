@@ -3,29 +3,22 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
              xmlns:vm="clr-namespace:App.ViewModels;assembly=App.ViewModels"
+             xmlns:local="clr-namespace:IndustrialDashboard"
              Background="{StaticResource BackgroundBrush}">
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
-
-        <!-- Inverse bool to visibility -->
-        <Style x:Key="OverlayChartStyle" TargetType="lvc:CartesianChart">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Margin" Value="0" />
-        </Style>
+        <local:HexToColorBrushConverter x:Key="HexBrush" />
+        <local:InverseBoolToVisibilityConverter x:Key="InvBoolToVis" />
     </UserControl.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />   <!-- Toolbar -->
-            <RowDefinition Height="*" />       <!-- Chart area -->
-            <RowDefinition Height="Auto" />   <!-- Time slider -->
-            <RowDefinition Height="Auto" />   <!-- Panel toggle -->
-            <RowDefinition Height="Auto" />   <!-- Signals panel -->
-            <RowDefinition Height="Auto" />   <!-- Status -->
+            <RowDefinition Height="Auto" />  <!-- Toolbar -->
+            <RowDefinition Height="*" />     <!-- Main content -->
         </Grid.RowDefinitions>
 
-        <!-- ── Toolbar ── -->
+        <!-- ══════════════════ TOOLBAR ══════════════════ -->
         <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}"
                 CornerRadius="8" Padding="10,8" Margin="0,0,0,6">
             <Grid>
@@ -33,8 +26,8 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
@@ -42,263 +35,436 @@
                 <!-- Segment file -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,12,0">
                     <TextBlock Text="Segment:" VerticalAlignment="Center" FontSize="11"
-                               Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,6,0" />
+                               Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,6,0"/>
                     <TextBox Text="{Binding SegmentDbPath, Mode=OneWay}" IsReadOnly="True"
-                             Width="180" FontSize="11"
-                             Background="{StaticResource CardBrush}" Foreground="{StaticResource TextPrimaryBrush}"
-                             BorderBrush="Transparent" Padding="5,3" VerticalContentAlignment="Center" />
+                             Width="160" FontSize="11" Background="{StaticResource CardBrush}"
+                             Foreground="{StaticResource TextPrimaryBrush}"
+                             BorderBrush="Transparent" Padding="5,3" VerticalContentAlignment="Center"/>
                     <Button Content="…" Click="BrowseSegment_Click" Style="{StaticResource PrimaryButton}"
-                            Padding="8,3" Margin="4,0,0,0" FontSize="11" />
+                            Padding="8,3" Margin="4,0,0,0" FontSize="11"/>
                 </StackPanel>
 
-                <!-- Tag file -->
+                <!-- Tag map file -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,12,0">
                     <TextBlock Text="Tag map:" VerticalAlignment="Center" FontSize="11"
-                               Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,6,0" />
+                               Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,6,0"/>
                     <TextBox Text="{Binding TagDbPath, Mode=OneWay}" IsReadOnly="True"
-                             Width="180" FontSize="11"
-                             Background="{StaticResource CardBrush}" Foreground="{StaticResource TextPrimaryBrush}"
-                             BorderBrush="Transparent" Padding="5,3" VerticalContentAlignment="Center" />
+                             Width="160" FontSize="11" Background="{StaticResource CardBrush}"
+                             Foreground="{StaticResource TextPrimaryBrush}"
+                             BorderBrush="Transparent" Padding="5,3" VerticalContentAlignment="Center"/>
                     <Button Content="…" Click="BrowseTagDb_Click" Style="{StaticResource PrimaryButton}"
-                            Padding="8,3" Margin="4,0,0,0" FontSize="11" />
+                            Padding="8,3" Margin="4,0,0,0" FontSize="11"/>
                 </StackPanel>
 
-                <!-- Load tags -->
+                <!-- Load Tags -->
                 <Button Grid.Column="2" Content="Load Tags" Command="{Binding LoadTagsCommand}"
-                        Style="{StaticResource PrimaryButton}" Padding="12,5" Margin="0,0,8,0" FontSize="11" />
+                        Style="{StaticResource PrimaryButton}" Padding="12,5" FontSize="11"/>
 
-                <!-- Plot -->
-                <Button Grid.Column="3" Content="▶ Plot" Command="{Binding PlotCommand}"
-                        Style="{StaticResource PrimaryButton}" Padding="12,5" FontSize="11"
-                        Background="#FF22883E" />
-
-                <!-- Date range label -->
-                <TextBlock Grid.Column="4" Text="{Binding DateRangeText}" FontSize="11"
+                <!-- Date range -->
+                <TextBlock Grid.Column="3" Text="{Binding DateRangeText}" FontSize="11"
                            Foreground="{StaticResource TextSecondaryBrush}"
-                           VerticalAlignment="Center" Margin="16,0" />
+                           VerticalAlignment="Center" Margin="16,0"/>
 
-                <!-- Chart mode toggle -->
+                <!-- Configure / Graph toggle -->
+                <Button Grid.Column="4" Content="{Binding ConfigureGraphLabel}"
+                        Command="{Binding PlotCommand}"
+                        Style="{StaticResource PrimaryButton}"
+                        Background="#FF22883E" Padding="14,5" FontSize="11" Margin="0,0,8,0"/>
+
+                <!-- Split/Overlay (graph mode only) -->
                 <Button Grid.Column="5" Content="{Binding ChartModeLabel}"
                         Command="{Binding ToggleChartModeCommand}"
                         Background="{StaticResource CardBrush}"
                         Foreground="{StaticResource TextSecondaryBrush}"
                         BorderBrush="Transparent" Padding="12,5" Cursor="Hand" FontSize="11"
-                        Margin="0,0,8,0" />
+                        Margin="0,0,8,0"
+                        Visibility="{Binding IsConfigureMode, Converter={StaticResource InvBoolToVis}}"/>
 
-                <!-- Loading indicator -->
-                <ProgressBar Grid.Column="6" IsIndeterminate="True" Width="100" Height="4"
+                <!-- Loading bar -->
+                <ProgressBar Grid.Column="6" IsIndeterminate="True" Width="80" Height="4"
                              Foreground="{StaticResource AccentBrush}" Background="Transparent"
                              BorderBrush="Transparent"
-                             Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}" />
+                             Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"/>
             </Grid>
         </Border>
 
-        <!-- ── Chart area ── -->
-        <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" CornerRadius="8">
-            <Grid>
-            <!-- Overlay mode (default visible, hidden in split mode via code-behind) -->
-            <lvc:CartesianChart x:Name="OverlayChart"
-                                Series="{Binding OverlaySeries}"
-                                XAxes="{Binding OverlayXAxes}"
-                                YAxes="{Binding OverlayYAxes}"
-                                Background="Transparent" />
+        <!-- ══════════════════ MAIN CONTENT ══════════════════ -->
+        <Grid Grid.Row="1">
 
-            <!-- Split mode — one chart per group stacked vertically (hidden by default) -->
-            <ScrollViewer x:Name="SplitChart" Visibility="Collapsed"
-                          VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding GroupCharts}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="{x:Type vm:GroupChartVm}">
-                        <Grid Height="160">
-                            <lvc:CartesianChart Series="{Binding Series}"
-                                               XAxes="{Binding XAxes}"
-                                               YAxes="{Binding YAxes}"
-                                               Background="Transparent" />
-                            <TextBlock Text="{Binding Label}"
-                                       Foreground="{StaticResource TextSecondaryBrush}"
-                                       FontSize="10" FontWeight="Bold"
-                                       HorizontalAlignment="Right" VerticalAlignment="Top"
-                                       Margin="0,4,8,0" />
-                        </Grid>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-            </ScrollViewer>
-            </Grid>
-        </Border>
-
-        <!-- ── Time range slider ── -->
-        <Border Grid.Row="2" Background="{StaticResource SurfaceBrush}"
-                CornerRadius="8" Padding="12,8" Margin="0,6,0,0">
-            <Grid>
+            <!-- ── CONFIGURE VIEW ── -->
+            <Grid Visibility="{Binding IsConfigureMode, Converter={StaticResource BoolToVis}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Text="TIME RANGE" FontSize="10" FontWeight="SemiBold"
-                           Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4" />
-
-                <!-- From slider -->
-                <Grid Grid.Row="1" Margin="0,0,0,4">
+                <!-- Search + actions -->
+                <Grid Grid.Row="0" Margin="0,0,0,8">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="40" />
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="140" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="From:" VerticalAlignment="Center" FontSize="11"
-                               Foreground="{StaticResource TextSecondaryBrush}" />
-                    <Slider Grid.Column="1"
-                            Minimum="{Binding SliderMin}" Maximum="{Binding SliderMax}"
-                            Value="{Binding SliderFrom}"
-                            IsSnapToTickEnabled="False"
-                            Foreground="{StaticResource AccentBrush}"
-                            Margin="8,0" />
-                    <TextBlock Grid.Column="2" Text="{Binding SliderFromLabel}"
-                               VerticalAlignment="Center" FontSize="11"
-                               Foreground="{StaticResource TextPrimaryBrush}" />
+                    <Grid Grid.Column="0">
+                        <TextBox Text="{Binding TagSearch, UpdateSourceTrigger=PropertyChanged}"
+                                 Background="{StaticResource CardBrush}"
+                                 Foreground="{StaticResource TextPrimaryBrush}"
+                                 BorderBrush="{StaticResource AccentBrush}" BorderThickness="1"
+                                 Padding="8,6" FontSize="12" x:Name="TagSearchBox"/>
+                        <TextBlock Text="🔍  Search tags…" IsHitTestVisible="False"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   FontSize="12" Padding="10,7"
+                                   VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding TagSearch}" Value="">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                    <Button Grid.Column="1" Content="Select All"
+                            Command="{Binding SelectAllCommand}"
+                            Background="{StaticResource CardBrush}"
+                            Foreground="{StaticResource TextSecondaryBrush}"
+                            BorderBrush="Transparent" Padding="12,6" Cursor="Hand" FontSize="11"
+                            Margin="8,0,0,0"/>
+                    <Button Grid.Column="2" Content="Clear"
+                            Command="{Binding ClearSelectionCommand}"
+                            Background="{StaticResource CardBrush}"
+                            Foreground="{StaticResource TextSecondaryBrush}"
+                            BorderBrush="Transparent" Padding="12,6" Cursor="Hand" FontSize="11"
+                            Margin="4,0,0,0"/>
                 </Grid>
 
-                <!-- To slider -->
-                <Grid Grid.Row="2">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="40" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="140" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="To:" VerticalAlignment="Center" FontSize="11"
-                               Foreground="{StaticResource TextSecondaryBrush}" />
-                    <Slider Grid.Column="1"
-                            Minimum="{Binding SliderMin}" Maximum="{Binding SliderMax}"
-                            Value="{Binding SliderTo}"
-                            IsSnapToTickEnabled="False"
-                            Foreground="{StaticResource AccentBrush}"
-                            Margin="8,0" />
-                    <TextBlock Grid.Column="2" Text="{Binding SliderToLabel}"
-                               VerticalAlignment="Center" FontSize="11"
-                               Foreground="{StaticResource TextPrimaryBrush}" />
-                </Grid>
+                <!-- Time range slider -->
+                <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}"
+                        CornerRadius="8" Padding="12,8" Margin="0,0,0,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding SliderLowerLabel}" FontSize="11"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center" Margin="0,0,12,0"/>
+                        <local:RangeSlider Grid.Column="1"
+                                           Minimum="{Binding SliderMin}"
+                                           Maximum="{Binding SliderMax}"
+                                           LowerValue="{Binding SliderLower, Mode=TwoWay}"
+                                           UpperValue="{Binding SliderUpper, Mode=TwoWay}"
+                                           LowerLabel="{Binding SliderLowerLabel}"
+                                           UpperLabel="{Binding SliderUpperLabel}" />
+                        <TextBlock Grid.Column="2" Text="{Binding SliderUpperLabel}" FontSize="11"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center" Margin="12,0,0,0"/>
+                    </Grid>
+                </Border>
+
+                <!-- Tag table -->
+                <Border Grid.Row="2" Background="{StaticResource SurfaceBrush}" CornerRadius="8">
+                    <DataGrid ItemsSource="{Binding FilteredTags}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False" CanUserDeleteRows="False"
+                              GridLinesVisibility="Horizontal"
+                              HeadersVisibility="Column"
+                              Background="{StaticResource SurfaceBrush}"
+                              RowBackground="{StaticResource SurfaceBrush}"
+                              AlternatingRowBackground="{StaticResource CardBrush}"
+                              Foreground="{StaticResource TextPrimaryBrush}"
+                              BorderBrush="Transparent"
+                              RowHeight="28" ColumnHeaderHeight="30">
+
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="{StaticResource CardBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+                                <Setter Property="FontSize" Value="11"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Padding" Value="8,0"/>
+                                <Setter Property="BorderBrush" Value="Transparent"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+
+                        <DataGrid.Columns>
+                            <!-- Select checkbox -->
+                            <DataGridCheckBoxColumn Header="☑" Width="36"
+                                Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <!-- Color swatch -->
+                            <DataGridTemplateColumn Header="Color" Width="50">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Rectangle Width="24" Height="14" RadiusX="3" RadiusY="3"
+                                                   Fill="{Binding ColorHex, Converter={StaticResource HexBrush}}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Tag name -->
+                            <DataGridTextColumn Header="Tag Name" Binding="{Binding TagName}"
+                                               Width="*" IsReadOnly="True">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontSize" Value="11"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Padding" Value="8,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- Min value -->
+                            <DataGridTextColumn Header="Min" Width="90" IsReadOnly="True"
+                                               Binding="{Binding MinValue, StringFormat={}{0:F3}}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontFamily" Value="Courier New"/>
+                                        <Setter Property="FontSize" Value="11"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Padding" Value="8,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- Max value -->
+                            <DataGridTextColumn Header="Max" Width="90" IsReadOnly="True"
+                                               Binding="{Binding MaxValue, StringFormat={}{0:F3}}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontFamily" Value="Courier New"/>
+                                        <Setter Property="FontSize" Value="11"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Padding" Value="8,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- Point count -->
+                            <DataGridTextColumn Header="Points" Width="80" IsReadOnly="True"
+                                               Binding="{Binding Points, StringFormat={}{0:N0}}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontSize" Value="11"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Padding" Value="8,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+
+                <!-- Status -->
+                <TextBlock Grid.Row="3" Text="{Binding StatusText}" FontSize="11"
+                           Foreground="{StaticResource TextSecondaryBrush}" Margin="4,6,0,0"/>
             </Grid>
-        </Border>
 
-        <!-- ── Signals panel toggle ── -->
-        <Button Grid.Row="3"
-                Content="{Binding PanelToggleLabel}"
-                Command="{Binding TogglePanelCommand}"
-                Background="{StaticResource CardBrush}"
-                Foreground="{StaticResource TextSecondaryBrush}"
-                BorderBrush="Transparent"
-                Padding="12,5" Cursor="Hand" FontSize="11"
-                HorizontalAlignment="Left"
-                Margin="0,4,0,0" />
+            <!-- ── GRAPH VIEW ── -->
+            <Grid Visibility="{Binding IsConfigureMode, Converter={StaticResource InvBoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />      <!-- Chart -->
+                    <RowDefinition Height="Auto" />   <!-- Time slider -->
+                    <RowDefinition Height="Auto" />   <!-- Cursor values -->
+                    <RowDefinition Height="Auto" />   <!-- Panel toggle -->
+                    <RowDefinition Height="Auto" />   <!-- Signals panel -->
+                    <RowDefinition Height="Auto" />   <!-- Status -->
+                </Grid.RowDefinitions>
 
-        <!-- ── Signals panel ── -->
-        <Border Grid.Row="4"
-                Visibility="{Binding IsPanelVisible, Converter={StaticResource BoolToVis}}"
-                Background="{StaticResource SurfaceBrush}"
-                CornerRadius="8" Margin="0,4,0,0"
-                MaxHeight="220">
-
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                <DataGrid ItemsSource="{Binding Tags}"
-                          AutoGenerateColumns="False"
-                          CanUserAddRows="False"
-                          CanUserDeleteRows="False"
-                          GridLinesVisibility="Horizontal"
-                          HeadersVisibility="Column"
-                          Background="{StaticResource SurfaceBrush}"
-                          RowBackground="{StaticResource SurfaceBrush}"
-                          AlternatingRowBackground="{StaticResource CardBrush}"
-                          Foreground="{StaticResource TextPrimaryBrush}"
-                          BorderBrush="Transparent"
-                          RowHeight="28"
-                          ColumnHeaderHeight="30">
-
-                    <DataGrid.ColumnHeaderStyle>
-                        <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="Background" Value="{StaticResource CardBrush}" />
-                            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
-                            <Setter Property="FontSize" Value="10" />
-                            <Setter Property="FontWeight" Value="SemiBold" />
-                            <Setter Property="Padding" Value="8,0" />
-                            <Setter Property="BorderBrush" Value="Transparent" />
-                        </Style>
-                    </DataGrid.ColumnHeaderStyle>
-
-                    <DataGrid.Columns>
-                        <!-- Visible checkbox -->
-                        <DataGridCheckBoxColumn Header="👁" Binding="{Binding IsVisible, UpdateSourceTrigger=PropertyChanged}" Width="36" />
-
-                        <!-- Tag name (read-only) -->
-                        <DataGridTextColumn Header="Tag Name" Binding="{Binding TagName}" Width="*" IsReadOnly="True">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="FontSize" Value="11" />
-                                    <Setter Property="VerticalAlignment" Value="Center" />
-                                    <Setter Property="Padding" Value="8,0" />
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
-
-                        <!-- Color picker (combo) -->
-                        <DataGridComboBoxColumn Header="Color"
-                                                SelectedItemBinding="{Binding ColorHex, UpdateSourceTrigger=PropertyChanged}"
-                                                ItemsSource="{x:Static vm:TagConfig.ColorPalette}"
-                                                Width="110" />
-
-                        <!-- Group -->
-                        <DataGridComboBoxColumn Header="Group"
-                                                SelectedItemBinding="{Binding GroupId, UpdateSourceTrigger=PropertyChanged}"
-                                                ItemsSource="{x:Static vm:TagConfig.AvailableGroups}"
-                                                Width="60" />
-
-                        <!-- Min Y -->
-                        <DataGridTextColumn Header="Min Y" Binding="{Binding MinY, StringFormat={}{0:F3}, UpdateSourceTrigger=PropertyChanged}" Width="80">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="FontFamily" Value="Courier New" />
-                                    <Setter Property="FontSize" Value="11" />
-                                    <Setter Property="VerticalAlignment" Value="Center" />
-                                    <Setter Property="Padding" Value="8,0" />
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
-
-                        <!-- Max Y -->
-                        <DataGridTextColumn Header="Max Y" Binding="{Binding MaxY, StringFormat={}{0:F3}, UpdateSourceTrigger=PropertyChanged}" Width="80">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="FontFamily" Value="Courier New" />
-                                    <Setter Property="FontSize" Value="11" />
-                                    <Setter Property="VerticalAlignment" Value="Center" />
-                                    <Setter Property="Padding" Value="8,0" />
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
-
-                        <!-- Auto-scale button -->
-                        <DataGridTemplateColumn Header="⟳" Width="44">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Button Content="⟳"
-                                            Command="{Binding AutoScaleCommand}"
+                <!-- Chart area -->
+                <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" CornerRadius="8">
+                    <Grid>
+                        <!-- Overlay chart -->
+                        <lvc:CartesianChart x:Name="OverlayChart"
+                                            Series="{Binding OverlaySeries}"
+                                            XAxes="{Binding OverlayXAxes}"
+                                            YAxes="{Binding OverlayYAxes}"
+                                            TooltipPosition="Hidden"
                                             Background="Transparent"
-                                            BorderBrush="Transparent"
-                                            Foreground="{StaticResource TextSecondaryBrush}"
-                                            FontSize="14" Cursor="Hand"
-                                            ToolTip="Auto-scale Y range from data" />
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </ScrollViewer>
-        </Border>
+                                            MouseMove="Chart_MouseMove" />
 
-        <!-- ── Status bar ── -->
-        <TextBlock Grid.Row="5" Text="{Binding StatusText}"
-                   Foreground="{StaticResource TextSecondaryBrush}"
-                   FontSize="11" Margin="4,6,0,2" />
+                        <!-- Split chart (hidden by default) -->
+                        <ScrollViewer x:Name="SplitChart" Visibility="Collapsed"
+                                      VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding GroupCharts}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type vm:GroupChartVm}">
+                                        <Grid Height="160">
+                                            <lvc:CartesianChart Series="{Binding Series}"
+                                                               XAxes="{Binding XAxes}"
+                                                               YAxes="{Binding YAxes}"
+                                                               TooltipPosition="Hidden"
+                                                               Background="Transparent"
+                                                               MouseMove="Chart_MouseMove"/>
+                                            <TextBlock Text="{Binding Label}"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                                       FontSize="10" FontWeight="Bold"
+                                                       HorizontalAlignment="Right"
+                                                       VerticalAlignment="Top" Margin="0,4,8,0"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <!-- Time range slider -->
+                <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}"
+                        CornerRadius="8" Padding="12,8" Margin="0,6,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding SliderLowerLabel}" FontSize="11"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center" Margin="0,0,12,0"/>
+                        <local:RangeSlider Grid.Column="1"
+                                           Minimum="{Binding SliderMin}"
+                                           Maximum="{Binding SliderMax}"
+                                           LowerValue="{Binding SliderLower, Mode=TwoWay}"
+                                           UpperValue="{Binding SliderUpper, Mode=TwoWay}"
+                                           LowerLabel="{Binding SliderLowerLabel}"
+                                           UpperLabel="{Binding SliderUpperLabel}" />
+                        <TextBlock Grid.Column="2" Text="{Binding SliderUpperLabel}" FontSize="11"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center" Margin="12,0,0,0"/>
+                    </Grid>
+                </Border>
+
+                <!-- Cursor value bar -->
+                <Border Grid.Row="2" Background="{StaticResource CardBrush}"
+                        CornerRadius="6" Padding="10,5" Margin="0,4,0,0">
+                    <TextBlock Text="{Binding CursorText}" FontSize="11"
+                               FontFamily="Courier New"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               TextTrimming="CharacterEllipsis" />
+                </Border>
+
+                <!-- Signals panel toggle -->
+                <Button Grid.Row="3" Content="{Binding PanelToggleLabel}"
+                        Command="{Binding TogglePanelCommand}"
+                        Background="{StaticResource CardBrush}"
+                        Foreground="{StaticResource TextSecondaryBrush}"
+                        BorderBrush="Transparent" Padding="12,5" Cursor="Hand"
+                        FontSize="11" HorizontalAlignment="Left" Margin="0,4,0,0"/>
+
+                <!-- Signals panel -->
+                <Border Grid.Row="4"
+                        Visibility="{Binding IsPanelVisible, Converter={StaticResource BoolToVis}}"
+                        Background="{StaticResource SurfaceBrush}"
+                        CornerRadius="8" Margin="0,4,0,0" MaxHeight="200">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                        <DataGrid ItemsSource="{Binding Tags}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False" CanUserDeleteRows="False"
+                                  GridLinesVisibility="Horizontal"
+                                  HeadersVisibility="Column"
+                                  Background="{StaticResource SurfaceBrush}"
+                                  RowBackground="{StaticResource SurfaceBrush}"
+                                  AlternatingRowBackground="{StaticResource CardBrush}"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  BorderBrush="Transparent"
+                                  RowHeight="28" ColumnHeaderHeight="30">
+
+                            <DataGrid.ColumnHeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="{StaticResource CardBrush}"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+                                    <Setter Property="FontSize" Value="11"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Padding" Value="8,0"/>
+                                    <Setter Property="BorderBrush" Value="Transparent"/>
+                                </Style>
+                            </DataGrid.ColumnHeaderStyle>
+
+                            <DataGrid.Columns>
+                                <DataGridCheckBoxColumn Header="👁" Width="36"
+                                    Binding="{Binding IsVisible, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <!-- Color swatch (read display) -->
+                                <DataGridTemplateColumn Header="Color" Width="50">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Rectangle Width="24" Height="14" RadiusX="3" RadiusY="3"
+                                                       Fill="{Binding ColorHex, Converter={StaticResource HexBrush}}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridComboBoxColumn Header="Color (edit)" Width="110"
+                                    SelectedItemBinding="{Binding ColorHex, UpdateSourceTrigger=PropertyChanged}"
+                                    ItemsSource="{x:Static vm:TagConfig.ColorPalette}"/>
+
+                                <DataGridTextColumn Header="Tag Name" Binding="{Binding TagName}"
+                                                   Width="*" IsReadOnly="True">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontSize" Value="11"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="Padding" Value="8,0"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <DataGridComboBoxColumn Header="Group" Width="60"
+                                    SelectedItemBinding="{Binding GroupId, UpdateSourceTrigger=PropertyChanged}"
+                                    ItemsSource="{x:Static vm:TagConfig.AvailableGroups}"/>
+
+                                <DataGridTextColumn Header="Min Y" Width="90"
+                                    Binding="{Binding MinY, StringFormat={}{0:F3}, UpdateSourceTrigger=PropertyChanged}">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontFamily" Value="Courier New"/>
+                                            <Setter Property="FontSize" Value="11"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="Padding" Value="8,0"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <DataGridTextColumn Header="Max Y" Width="90"
+                                    Binding="{Binding MaxY, StringFormat={}{0:F3}, UpdateSourceTrigger=PropertyChanged}">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontFamily" Value="Courier New"/>
+                                            <Setter Property="FontSize" Value="11"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="Padding" Value="8,0"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <DataGridTemplateColumn Header="⟳" Width="40">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="⟳" Command="{Binding AutoScaleCommand}"
+                                                    Background="Transparent" BorderBrush="Transparent"
+                                                    Foreground="{StaticResource TextSecondaryBrush}"
+                                                    FontSize="14" Cursor="Hand"
+                                                    ToolTip="Auto-scale from data"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </ScrollViewer>
+                </Border>
+
+                <!-- Status -->
+                <TextBlock Grid.Row="5" Text="{Binding StatusText}" FontSize="11"
+                           Foreground="{StaticResource TextSecondaryBrush}" Margin="4,6,0,0"/>
+            </Grid>
+        </Grid>
     </Grid>
 </UserControl>

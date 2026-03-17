@@ -1,5 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using LiveChartsCore.SkiaSharpView.WPF;
 using Microsoft.Win32;
 using WinCcVm = App.ViewModels.WinCcViewModel;
 
@@ -17,7 +19,6 @@ public partial class WinCcView : UserControl
     {
         if (e.NewValue is WinCcVm vm)
         {
-            // Wire IsSplitMode changes to swap chart visibility
             vm.PropertyChanged += (_, args) =>
             {
                 if (args.PropertyName == nameof(WinCcVm.IsSplitMode))
@@ -29,11 +30,33 @@ public partial class WinCcView : UserControl
 
     private void UpdateChartVisibility(bool isSplit)
     {
-        // Find the two children of the Border in row 1
-        if (FindName("OverlayChart") is FrameworkElement overlay)
-            overlay.Visibility = isSplit ? Visibility.Collapsed : Visibility.Visible;
-        if (FindName("SplitChart") is FrameworkElement split)
-            split.Visibility = isSplit ? Visibility.Visible : Visibility.Collapsed;
+        if (OverlayChart is not null)
+            OverlayChart.Visibility = isSplit ? Visibility.Collapsed : Visibility.Visible;
+        if (SplitChart is not null)
+            SplitChart.Visibility = isSplit ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void Chart_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (DataContext is not WinCcVm vm) return;
+        if (sender is not CartesianChart chart) return;
+
+        var pos = e.GetPosition(chart);
+        if (chart.ActualWidth <= 0) return;
+
+        try
+        {
+            // Map pixel X to data X using axis min/max
+            var xAxes = chart.XAxes?.ToArray();
+            if (xAxes == null || xAxes.Length == 0) return;
+
+            // Use the chart's ScaleUIPoint to convert screen coords to data coords
+            var dataPoint = chart.ScalePixelsToData(new LiveChartsCore.Drawing.LvcPointD(pos.X, pos.Y));
+            long xTick = (long)dataPoint.X;
+
+            vm.UpdateCursorValues(xTick, vm.Tags);
+        }
+        catch { /* ignore errors during hover */ }
     }
 
     private void BrowseSegment_Click(object sender, RoutedEventArgs e)

@@ -66,5 +66,17 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+        <!-- Thumb style for RangeSlider -->
+        <Style x:Key="ThumbStyle" TargetType="Thumb">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Ellipse Width="16" Height="16"
+                                 Fill="{StaticResource AccentBrush}"
+                                 Stroke="#FF2A2A4A" StrokeThickness="1.5" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Application.Resources>
 </Application>
